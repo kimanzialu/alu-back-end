@@ -1,58 +1,36 @@
 #!/usr/bin/python3
+"""Script to get todos for a user from API"""
 
-"""
-This script fetches tasks for a given employee from the API.
-It takes an employee ID as a command-line argument.
-Displays completed tasks for the employee and their total task count.
-"""
-
-import requests  # HTTP requests
-import sys  # system operations
+import requests
+import sys
 
 
-def gather_data(employee_id):
-    """Fetch and display tasks for an employee."""
-    url = f"https://jsonplaceholder.typicode.com/users/{employee_id}/todos"
-    response = requests.get(url)
+def main():
+    """main function"""
+    user_id = int(sys.argv[1])
+    todo_url = 'https://jsonplaceholder.typicode.com/todos'
+    user_url = 'https://jsonplaceholder.typicode.com/users/{}'.format(user_id)
 
-    if response.status_code != 200:
-        print("Error: Unable to fetch data")
-        return
+    response = requests.get(todo_url)
 
-    data = response.json()
-    completed_tasks = [task['title'] for task in data if task['completed']]
-    total_tasks = len(data)
-    completed_count = len(completed_tasks)
+    total_questions = 0
+    completed = []
+    for todo in response.json():
 
-    if total_tasks == 0:
-        print(f"Employee {employee_name(employee_id)} is done with tasks("
-              f"0/0):")
-    else:
-        print(f"Employee {employee_name(employee_id)} is done with tasks("
-              f"{completed_count}/{total_tasks}):")
-        for task in completed_tasks:
-            print(f"\t {task}")
+        if todo['userId'] == user_id:
+            total_questions += 1
 
+            if todo['completed']:
+                completed.append(todo['title'])
 
-def employee_name(employee_id):
-    """Fetch employee name using their ID."""
-    url = f"https://jsonplaceholder.typicode.com/users/{employee_id}"
-    response = requests.get(url)
+    user_name = requests.get(user_url).json()['name']
 
-    if response.status_code == 200:
-        user_data = response.json()
-        return user_data.get('name', 'Unknown Employee')
-    else:
-        return 'Unknown Employee'
+    printer = ("Employee {} is done with tasks({}/{}):".format(user_name,
+               len(completed), total_questions))
+    print(printer)
+    for q in completed:
+        print("\t {}".format(q))
 
 
-if __name__ == "__main__":
-    """Main script execution."""
-    if len(sys.argv) != 2:
-        print("Usage: python3 0-gather_data_from_an_API.py <employee_id>")
-    else:
-        try:
-            employee_id = int(sys.argv[1])
-            gather_data(employee_id)
-        except ValueError:
-            print("Error: Employee ID must be an integer.")
+if __name__ == '__main__':
+    main()
